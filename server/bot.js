@@ -23,8 +23,6 @@ function recordSensorLog (id, level, ultrasonic, power, notify) {
     notify ? 'notify=1' : null
   ]
 
-  console.log(queries.filter(r => r).join('&'))
-
   return fetch(`http://localhost:${PORT}/device/${id}/write?${queries.filter(r => r).join('&')}`, { method: 'GET' })
 }
 
@@ -65,8 +63,6 @@ cron.schedule('*/15 * * * * *', async () => {
     } else if (newWaterLevel < 1) {
       newWaterLevel = 1
     }
-
-    console.log(newWaterLevel === sensors[id].waterlevel)
 
     if (sensors[id].waterlevel && sensors[id].waterlevel !== newWaterLevel) {
       sensors[id].notify = true
