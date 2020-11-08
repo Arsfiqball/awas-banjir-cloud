@@ -1,0 +1,17 @@
+{
+  "name": "awasbanjir-server",
+  "version": "0.0.1",
+  "description": "Backend app of Awas Banjir",
+  "main": "index.js",
+  "author": "Iqbal Mohammad Abdul Ghoni <iqballmags@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@koa/router": "^10.0.0",
+    "dotenv": "^8.2.0",
+    "firebase-admin": "^9.3.0",
+    "koa": "^2.13.0",
+    "mongodb": "^3.6.2",
+    "node-cron": "^2.0.3",
+    "node-fetch": "^2.6.1"
+  }
+}
