@@ -49,7 +49,7 @@ cron.schedule('*/15 * * * * *', async () => {
     }
 
     sensors[id].ultrasonic = sensors[id].ultrasonic
-      ? (sensors[id].ultrasonic + getRandomInt(sensors[id].ultrasonic > 50 ? -50 : 0 - sensors[id].ultrasonic, 50))
+      ? (sensors[id].ultrasonic + getRandomInt(sensors[id].ultrasonic > 5 ? -5 : 0 - sensors[id].ultrasonic, 5))
       : getRandomInt(0, 100)
 
     sensors[id].power = sensors[id].power
