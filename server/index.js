@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const assert = require('assert')
 const Koa = require('koa')
 const Router = require('@koa/router')
