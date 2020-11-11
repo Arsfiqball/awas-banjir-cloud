@@ -135,7 +135,7 @@ router.get('/device/:id/write', async (ctx) => {
     ultrasonic: Number(ctx.query.ultrasonic),
     waterlevel: Number(ctx.query.waterlevel),
     power: Number(ctx.query.power),
-    recorded_at: Date.now()
+    recorded_at: new Date()
   }
 
   const device = await deviceCollection.findOneAndUpdate({ _id: id }, {
