@@ -72,8 +72,21 @@ MongoClient
   .catch(console.error)
 
 router.get('/device/list', async (ctx) => {
+  const params = {}
   const deviceCollection = ctx.db.collection('devices')
-  const res = await deviceCollection.find().toArray()
+
+  if (ctx.query.ids && ctx.query.ids.length) {
+    params._id = { $in: ctx.query.ids.map(r => ObjectID(r)) }
+  }
+
+  if (ctx.query.search) {
+    params.$or = [
+      { name: RegExp(ctx.query.search, 'i') },
+      { description: RegExp(ctx.query.search, 'i') }
+    ]
+  }
+
+  const res = await deviceCollection.find(params).toArray()
   ctx.body = res
   ctx.status = 200
 })
