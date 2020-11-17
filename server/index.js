@@ -27,7 +27,7 @@ function isNumeric(str) {
 
 function sendNotification ({ id, title, body }) {
   message = {
-    topic: 'all_sensors',
+    topic: 'sensor_' + id,
     notification: {
       body,
       title,
