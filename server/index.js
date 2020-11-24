@@ -1,8 +1,11 @@
 require('dotenv').config()
 
+const path = require('path')
 const assert = require('assert')
 const Koa = require('koa')
 const Router = require('@koa/router')
+const bodyParser = require('koa-bodyparser')
+const koaStatic = require('koa-static')
 const MongoClient = require('mongodb').MongoClient
 const ObjectID = require('mongodb').ObjectID
 const admin = require('firebase-admin')
@@ -70,6 +73,85 @@ MongoClient
       .createIndex({ recorded_at: 1 }, { expireAfterSeconds: 3600 })
   })
   .catch(console.error)
+
+router.post('/device/add', async (ctx) => {
+  const deviceCollection = ctx.db.collection('devices')
+
+  const name = ctx.request.body.name
+  const description = ctx.request.body.description
+  const secretKey = ctx.request.body.secret_key
+
+  if (
+    !name ||
+    !description ||
+    !secretKey
+  ) {
+    ctx.body = 'Parameter Invalid'
+    ctx.status = 400
+    return null
+  }
+
+  await deviceCollection.insertOne({
+    name,
+    description,
+    secret_key: secretKey
+  })
+
+  ctx.body = 'OK'
+  ctx.status = 200
+})
+
+router.put('/device/:id', async (ctx) => {
+  const deviceCollection = ctx.db.collection('devices')
+
+  if (!ObjectID.isValid(ctx.params.id)) {
+    ctx.body = 'ID Invalid'
+    ctx.status = 400
+    return null
+  }
+
+  const id = ObjectID(ctx.params.id)
+  const name = ctx.request.body.name
+  const description = ctx.request.body.description
+  const secretKey = ctx.request.body.secret_key
+
+  if (
+    !name ||
+    !description ||
+    !secretKey
+  ) {
+    ctx.body = 'Parameter Invalid'
+    ctx.status = 400
+    return null
+  }
+
+  await deviceCollection.findOneAndUpdate({ _id: id }, {
+    $set: {
+      name,
+      description,
+      secret_key: secretKey
+    }
+  })
+
+  ctx.body = 'OK'
+  ctx.status = 200
+})
+
+router.delete('/device/:id', async (ctx) => {
+  const deviceCollection = ctx.db.collection('devices')
+
+  if (!ObjectID.isValid(ctx.params.id)) {
+    ctx.body = 'ID Invalid'
+    ctx.status = 400
+    return null
+  }
+
+  const id = ObjectID(ctx.params.id)
+  await deviceCollection.findOneAndDelete({ _id: id })
+
+  ctx.body = 'OK'
+  ctx.status = 200
+})
 
 router.get('/device/list', async (ctx) => {
   const params = {}
@@ -180,8 +262,10 @@ router.get('/device/:id/write', async (ctx) => {
   ctx.status = 200
 })
 
+app.use(bodyParser())
 app.use(router.routes())
 app.use(router.allowedMethods())
+app.use(koaStatic(path.resolve(__dirname, '../admin/dist')))
 
 app.listen(PORT, HOST, () => {
   console.log(`Server listening at port ${HOST}:${PORT}`)
