@@ -1,10 +1,30 @@
 <template>
   <div class="section">
     <div class="container device-container">
+      <div :class="['modal', modalConfirmDeleteIsActive ? 'is-active' : null]">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+          <header class="modal-card-head">
+            <p class="modal-card-title">Konfirmasi</p>
+          </header>
+          <div class="modal-card-body">
+            <p>Apakah anda yakin ingin menghapus device ini dari database? Harap diingat bahwa entitas tidak akan kembali setelah dihapus!</p>
+          </div>
+          <div class="modal-card-foot">
+            <a @click="handleDelete" class="button is-danger">
+              Ya
+            </a>
+            <a class="button is-secondary" @click="modalConfirmDeleteIsActive = false">
+              Tidak
+            </a>
+          </div>
+        </div>
+        <button @click="modalConfirmDeleteIsActive = false" class="modal-close is-large" aria-label="close"></button>
+      </div>
       <form method="post" @submit.prevent="handleSave">
         <div class="field" v-if="this.$route.params.id">
           <div class="control has-text-right">
-            <a @click="handleDelete" class="button is-danger">
+            <a @click="modalConfirmDeleteIsActive = true" class="button is-danger">
               <span>
                 Hapus
               </span>
@@ -93,7 +113,8 @@ export default {
     return {
       name: null,
       description: null,
-      secretKey: null
+      secretKey: null,
+      modalConfirmDeleteIsActive: false
     }
   },
 
