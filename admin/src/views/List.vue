@@ -16,14 +16,14 @@
           <input type="text" class="input" v-model="search" placeholder="Cari perangkat...">
         </div>
         <div class="control">
-          <router-link to="/" class="button is-secondary">
+          <a @click="handleLogout" class="button is-secondary">
             <span class="icon">
               <i class="fas fa-power-off"></i>
             </span>
             <span>
               Log Out
             </span>
-          </router-link>
+          </a>
         </div>
       </div>
     </div>
@@ -68,12 +68,19 @@ export default {
   },
 
   async mounted () {
+    if (!api.defaults.headers.common.Authorization) {
+      return this.$router.push('/')
+    }
+
     const res = await api.get('/device/list')
     this.devices = res.data
   },
 
   methods: {
-    //
+    handleLogout () {
+      delete api.defaults.headers.common.Authorization
+      this.$router.push('/')
+    }
   }
 }
 </script>

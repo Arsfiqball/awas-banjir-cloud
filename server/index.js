@@ -9,6 +9,7 @@ const koaStatic = require('koa-static')
 const MongoClient = require('mongodb').MongoClient
 const ObjectID = require('mongodb').ObjectID
 const admin = require('firebase-admin')
+const jwt = require('jsonwebtoken')
 const serviceAccount = require('./fcm-key.json')
 
 admin.initializeApp({
@@ -59,6 +60,9 @@ const HOST = process.env.HOST || '0.0.0.0'
 const PORT = process.env.PORT || 8080
 const MONGO_URL = process.env.MONGO_URL || 'mongodb://localhost:27017'
 const MONGO_DB = process.env.MONGO_DB || 'awasbanjir'
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
+const APP_SECRET = process.env.APP_SECRET
 
 const app = new Koa()
 const router = new Router()
@@ -75,6 +79,8 @@ MongoClient
   .catch(console.error)
 
 router.post('/device/add', async (ctx) => {
+  if (!ctx.auth.admin) return ctx.throw(403)
+
   const deviceCollection = ctx.db.collection('devices')
 
   const name = ctx.request.body.name
@@ -102,6 +108,8 @@ router.post('/device/add', async (ctx) => {
 })
 
 router.put('/device/:id', async (ctx) => {
+  if (!ctx.auth.admin) return ctx.throw(403)
+
   const deviceCollection = ctx.db.collection('devices')
 
   if (!ObjectID.isValid(ctx.params.id)) {
@@ -138,6 +146,8 @@ router.put('/device/:id', async (ctx) => {
 })
 
 router.delete('/device/:id', async (ctx) => {
+  if (!ctx.auth.admin) return ctx.throw(403)
+
   const deviceCollection = ctx.db.collection('devices')
 
   if (!ObjectID.isValid(ctx.params.id)) {
@@ -260,6 +270,36 @@ router.get('/device/:id/write', async (ctx) => {
 
   ctx.body = 'OK'
   ctx.status = 200
+})
+
+router.post('/admin/login', async (ctx) => {
+  const { username, password } = ctx.request.body
+
+  if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+    ctx.body = 'Invalid Credentials'
+    ctx.status = 422
+    return null
+  }
+
+  ctx.body = jwt.sign({ admin: 1 }, APP_SECRET)
+  ctx.status = 200
+})
+
+app.use(async (ctx, next) => {
+  if (ctx.request.headers.authorization) {
+    const [scheme, token] = ctx.request.headers.authorization.split(' ')
+
+    if (scheme === 'Bearer') {
+      try {
+        const decoded = jwt.verify(token, APP_SECRET)
+        ctx.auth = decoded
+      } catch (err) {
+        return ctx.throw(401)
+      }
+    }
+  }
+
+  await next()
 })
 
 app.use(bodyParser())

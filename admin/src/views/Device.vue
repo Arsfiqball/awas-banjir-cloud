@@ -98,6 +98,10 @@ export default {
   },
 
   async mounted () {
+    if (!api.defaults.headers.common.Authorization) {
+      return this.$router.push('/')
+    }
+
     if (this.$route.params.id) {
       const { data } = await api.get(`/device/${this.$route.params.id}/logs`)
       this.name = data.name

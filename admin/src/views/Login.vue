@@ -3,13 +3,29 @@
     <div class="container login-container">
       <form method="post" @submit.prevent="handleSubmitLogin">
         <div class="field">
+          <p class="help is-danger" v-if="error">
+            {{error}}
+          </p>
+        </div>
+        <div class="field">
           <div class="control">
             <input
               type="text"
               class="input"
-              name="token"
-              v-model="token"
-              placeholder="Masukan token..."
+              name="username"
+              v-model="username"
+              placeholder="Masukan username..."
+            />
+          </div>
+        </div>
+        <div class="field">
+          <div class="control">
+            <input
+              type="password"
+              class="input"
+              name="password"
+              v-model="password"
+              placeholder="Masukan password..."
             />
           </div>
         </div>
@@ -26,6 +42,8 @@
 </template>
 
 <script>
+import { api } from '@/api'
+
 export default {
   name: 'Login',
 
@@ -34,13 +52,25 @@ export default {
 
   data () {
     return {
-      token: null
+      error: null,
+      username: null,
+      password: null
     }
   },
 
   methods: {
-    handleSubmitLogin () {
-      this.$router.push('/list')
+    async handleSubmitLogin () {
+      try {
+        const { data } = await api.post('/admin/login', {
+          username: this.username,
+          password: this.password
+        })
+
+        api.defaults.headers.common.Authorization = 'Bearer ' + data
+        this.$router.push('/list')
+      } catch (err) {
+        this.error = err.response.data || err.response.statusText || 'Terjadi galat!'
+      }
     }
   }
 }
