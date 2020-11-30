@@ -9,11 +9,11 @@ admin.initializeApp({
 })
 
 function send (title, body) {
-  message = {
+  const message = {
     topic: 'all_sensors',
     notification: {
       body,
-      title,
+      title
     },
     android: {
       notification: {

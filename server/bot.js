@@ -3,7 +3,6 @@ require('dotenv').config()
 const fetch = require('node-fetch')
 const cron = require('node-cron')
 const MongoClient = require('mongodb').MongoClient
-const ObjectID = require('mongodb').ObjectID
 
 const PORT = process.env.PORT || 8080
 const MONGO_URL = process.env.MONGO_URL || 'mongodb://localhost:27017'
@@ -35,7 +34,7 @@ MongoClient
   .then(client => {
     const db = client.db(MONGO_DB)
     db.collection('devices').find().toArray().then(devices => {
-      devices.map(r => {
+      devices.forEach(r => {
         sensorIds.push(r._id)
       })
     })
@@ -43,7 +42,7 @@ MongoClient
   .catch(console.error)
 
 cron.schedule('*/15 * * * * *', async () => {
-  sensorIds.map(id => {
+  sensorIds.forEach(id => {
     if (!sensors[id]) {
       sensors[id] = {}
     }
@@ -53,7 +52,7 @@ cron.schedule('*/15 * * * * *', async () => {
       : getRandomInt(0, 100)
 
     sensors[id].power = sensors[id].power
-      ? (sensors[id].power + getRandomInt(sensors[id].power > .05 ? -5 : 0 - sensors[id].power / 0.01, 5) * 0.01)
+      ? (sensors[id].power + getRandomInt(sensors[id].power > 0.05 ? -5 : 0 - sensors[id].power / 0.01, 5) * 0.01)
       : getRandomInt(0, 100) * 0.01
 
     let newWaterLevel = sensors[id].ultrasonic >= 100 ? Math.floor((sensors[id].ultrasonic - 50) / 50) + 1 : 1
@@ -73,7 +72,7 @@ cron.schedule('*/15 * * * * *', async () => {
     sensors[id].waterlevel = newWaterLevel
   })
 
-  const res = await Promise.all(sensorIds.map(id => recordSensorLog(
+  await Promise.all(sensorIds.map(id => recordSensorLog(
     id,
     sensors[id].waterlevel,
     sensors[id].ultrasonic,

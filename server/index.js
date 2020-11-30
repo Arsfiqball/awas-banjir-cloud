@@ -1,7 +1,6 @@
 require('dotenv').config()
 
 const path = require('path')
-const assert = require('assert')
 const Koa = require('koa')
 const Router = require('@koa/router')
 const bodyParser = require('koa-bodyparser')
@@ -25,16 +24,16 @@ function transWaterLevel (n) {
   return '???'
 }
 
-function isNumeric(str) {
+function isNumeric (str) {
   return !isNaN(str) && !isNaN(parseFloat(str))
 }
 
 function sendNotification ({ id, title, body }) {
-  message = {
+  const message = {
     topic: 'sensor_' + id,
     notification: {
       body,
-      title,
+      title
     },
     android: {
       // collapseKey: 'ALL_SENSORS',
@@ -255,7 +254,7 @@ router.get('/device/:id/write', async (ctx) => {
     return null
   }
 
-  const savedRecord = await recordCollection.insertOne({
+  await recordCollection.insertOne({
     device_id: id,
     ...record
   })
