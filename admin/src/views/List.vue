@@ -13,7 +13,9 @@
           </router-link>
         </div>
         <div class="control is-expanded">
-          <input type="text" class="input" v-model="search" placeholder="Cari perangkat...">
+          <form @submit.prevent="load">
+            <input type="text" class="input" v-model="search" placeholder="Cari perangkat...">
+          </form>
         </div>
         <div class="control">
           <a @click="handleLogout" class="button is-secondary">
@@ -72,13 +74,23 @@ export default {
       return this.$router.push('/')
     }
 
-    const res = await api.get('/device/list')
-    this.devices = res.data
+    this.load()
   },
 
   methods: {
+    async load () {
+      try {
+        const appendSearch = this.search ? '?search=' + this.search : ''
+        const res = await api.get('/device/list' + appendSearch)
+        this.devices = res.data
+      } catch (err) {
+        this.$root.forceLogoutOn401(err)
+      }
+    },
+
     handleLogout () {
       delete api.defaults.headers.common.Authorization
+      this.$root.deactivateRevokeTokenPoll()
       this.$router.push('/')
     }
   }

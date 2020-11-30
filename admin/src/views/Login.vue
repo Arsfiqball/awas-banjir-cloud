@@ -60,17 +60,31 @@ export default {
 
   methods: {
     async handleSubmitLogin () {
+      delete api.defaults.headers.common.Authorization
+
       try {
         const { data } = await api.post('/admin/login', {
           username: this.username,
           password: this.password
         })
 
-        api.defaults.headers.common.Authorization = 'Bearer ' + data
+        api.defaults.headers.common.Authorization = 'Bearer ' + data.token
+        this.$root.activateRevokeTokenPoll()
         this.$router.push('/list')
       } catch (err) {
-        this.error = err.response.data || err.response.statusText || 'Terjadi galat!'
+        if (err.response.status === 400) {
+          this.error = 'Harap masukan input dengan benar!'
+        } else if (err.response.status === 401) {
+          this.error = 'Username atau password salah!'
+        } else if (err.response.status === 500) {
+          this.error = 'Terjadi kendala di server'
+        } else {
+          this.error = 'Terjadi kesalahan, periksa koneksi anda'
+        }
       }
+
+      this.username = null
+      this.password = null
     }
   }
 }

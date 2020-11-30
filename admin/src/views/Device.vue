@@ -34,6 +34,20 @@
             </a>
           </div>
         </div>
+        <div class="field is-horizontal" v-if="this.$route.params.id">
+          <div class="field-label is-normal">
+            <label class="label">
+              ID
+            </label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control">
+                <input type="text" class="input" :value="this.$route.params.id" placeholder="Id perangkat..." readonly>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="field is-horizontal">
           <div class="field-label is-normal">
             <label class="label">
@@ -72,7 +86,7 @@
           <div class="field-body">
             <div class="field">
               <div class="control">
-                <input type="text" class="input" v-model="secretKey" placeholder="Tulis secret key...">
+                <textarea rows="6" class="textarea" v-model="secretKey" placeholder="Tulis secret key..."></textarea>
               </div>
             </div>
           </div>
@@ -124,10 +138,14 @@ export default {
     }
 
     if (this.$route.params.id) {
-      const { data } = await api.get(`/device/${this.$route.params.id}/logs`)
-      this.name = data.name
-      this.description = data.description
-      this.secretKey = data.secret_key
+      try {
+        const { data } = await api.get(`/device/${this.$route.params.id}`)
+        this.name = data.name
+        this.description = data.description
+        this.secretKey = data.secret_key
+      } catch (err) {
+        this.$root.forceLogoutOn401(err)
+      }
     }
   },
 
