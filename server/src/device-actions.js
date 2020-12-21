@@ -105,7 +105,8 @@ exports.list = async (ctx) => {
   const projection = {
     _id: 1,
     name: 1,
-    description: 1
+    description: 1,
+    last_recorded: 1
   }
 
   if (ctx.auth && ctx.auth.admin) {
