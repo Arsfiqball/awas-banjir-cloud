@@ -204,7 +204,7 @@ exports.read = async (ctx) => {
           }
         }])
         .limit(48)
-        .sort('_id', -1)
+        .sort({ _id: -1 })
         .project({ _id: 1, ultrasonic: 1, waterlevel: 1, power: 1, recorded_at: 1 })
         .toArray()
     } else if (logMode === '2weeks') {
