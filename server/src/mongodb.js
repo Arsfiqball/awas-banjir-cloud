@@ -17,6 +17,10 @@ exports.setup = (app) => {
       app.context.db
         .collection('records_origin')
         .createIndex({ recorded_at: 1 }, { expireAfterSeconds: 3600 })
+
+      app.context.db
+        .collection('records_perhour')
+        .createIndex({ recorded_at: 1 }, { expireAfterSeconds: 3600 * 24 * 14 })
     })
     .catch(console.error)
 }

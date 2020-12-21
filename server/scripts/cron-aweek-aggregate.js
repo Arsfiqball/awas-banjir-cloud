@@ -29,7 +29,7 @@ mongodb
           db
             .collection('records_perhour')
             .insertMany(values)
-            .then(() => console.log('written' + values.length))
+            .then(() => console.log('written ' + values.length))
             .catch(console.error)
         })
     })
