@@ -102,10 +102,22 @@ exports.list = async (ctx) => {
     params.$or = [{ name: regexSearch }, { description: regexSearch }]
   }
 
+  const projection = {
+    _id: 1,
+    name: 1,
+    description: 1
+  }
+
+  if (ctx.auth && ctx.auth.admin) {
+    projection.secret_key = 1
+  }
+
   const res = await ctx
     .db
     .collection('devices')
     .find(params)
+    .limit(100)
+    .project(projection)
     .toArray()
 
   ctx.body = res
@@ -125,7 +137,7 @@ exports.read = async (ctx) => {
   }
 
   if (ctx.auth && ctx.auth.admin) {
-    projection.secretKey = 1
+    projection.secret_key = 1
   }
 
   const res = await ctx
