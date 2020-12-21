@@ -22,7 +22,7 @@ program
   .option('-k, --secret-key <string>', 'Admin token secret key')
   .description('Create bots, with key pairs: public-key.pem and private-key.pem')
   .action(async (count, opts) => {
-    const token = await auth.createAdminToken(opts.secretkey || null)
+    const token = await auth.createAdminToken(opts.secretKey || null)
     const bots = []
 
     for (let i = 0; i < count; i++) {
@@ -89,7 +89,7 @@ program
   .option('-k, --secret-key <string>', 'Admin token secret key')
   .description('Hit server with bots, with key pairs: public-key.pem and private-key.pem')
   .action(async (opts) => {
-    const token = await auth.createAdminToken(opts.secretkey || null)
+    const token = await auth.createAdminToken(opts.secretKey || null)
 
     function getRandomInt (min, max) {
       min = Math.ceil(min)
@@ -171,7 +171,7 @@ program
   .option('-k, --secret-key <string>', 'Admin token secret key')
   .description('Hit server with bots (attack mode), with key pairs: public-key.pem and private-key.pem')
   .action(async (count, opts) => {
-    const token = await auth.createAdminToken(opts.secretkey)
+    const token = await auth.createAdminToken(opts.secretKey)
 
     async function recordSensorLog (id, n) {
       const queries = [
@@ -224,8 +224,8 @@ program
   .option('-n, --notify', 'Send notification')
   .description('Simulate bot request to write log')
   .action(async (id, opts) => {
-    const privateKey = opts.privatekey
-      ? fs.readFileSync(path.resolve(process.cwd(), opts.privatekey), 'utf8')
+    const privateKey = opts.privateKey
+      ? fs.readFileSync(path.resolve(process.cwd(), opts.privateKey), 'utf8')
       : devicePrivateKey
 
     const queries = [
