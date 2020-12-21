@@ -3,6 +3,11 @@ const MongoClient = require('mongodb').MongoClient
 const MONGO_URL = process.env.MONGO_URL || 'mongodb://localhost:27017'
 const MONGO_DB = process.env.MONGO_DB || 'awasbanjir'
 
+exports.createConnection = async () => {
+  const client = await MongoClient.connect(MONGO_URL, { native_parser: true, useUnifiedTopology: true })
+  return client.db(MONGO_DB)
+}
+
 exports.setup = (app) => {
   MongoClient
     .connect(MONGO_URL, { native_parser: true, useUnifiedTopology: true })

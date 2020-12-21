@@ -146,14 +146,97 @@ exports.read = async (ctx) => {
     .findOne({ _id: id }, { projection })
 
   if (withLog) {
-    res.records = await ctx
-      .db
-      .collection('records_origin')
-      .find({ device_id: id })
-      .limit(20)
-      .sort('_id', -1)
-      .project({ _id: 1, ultrasonic: 1, waterlevel: 1, power: 1, recorded_at: 1 })
-      .toArray()
+    const logMode = ctx.query.log_mode ? ctx.query.log_mode.toString() : 'realtime'
+
+    if (logMode === 'realtime') {
+      res.records = await ctx
+        .db
+        .collection('records_origin')
+        .find({ device_id: id })
+        .limit(20)
+        .sort('_id', -1)
+        .project({ _id: 1, ultrasonic: 1, waterlevel: 1, power: 1, recorded_at: 1 })
+        .toArray()
+    } else if (logMode === '1hour') {
+      res.records = await ctx
+        .db
+        .collection('records_origin')
+        .aggregate([{
+          $match: {
+            device_id: id
+          }
+        }, {
+          $group: {
+            _id: { $dateToString: { date: '$recorded_at', format: '%Y-%m-%d %H:%M' } },
+            ultrasonic: { $avg: '$ultrasonic' },
+            waterlevel: { $avg: '$waterlevel' },
+            power: { $avg: '$power' },
+            recorded_at: { $max: '$recorded_at' }
+          }
+        }])
+        .limit(60)
+        .sort({ _id: -1 })
+        .project({ _id: 1, ultrasonic: 1, waterlevel: 1, power: 1, recorded_at: 1 })
+        .toArray()
+
+      res.records = res.records.map(r => ({
+        _id: r._id,
+        ultrasonic: Number(r.ultrasonic.toFixed(2)),
+        waterlevel: Number(r.waterlevel.toFixed(0)),
+        power: Number(r.power.toFixed(5)),
+        recorded_at: r.recorded_at
+      }))
+    } else if (logMode === '2days') {
+      res.records = await ctx
+        .db
+        .collection('records_perhour')
+        .aggregate([{
+          $match: {
+            device_id: id
+          }
+        }, {
+          $group: {
+            _id: { $dateToString: { date: '$recorded_at', format: '%Y-%m-%d %H' } },
+            ultrasonic: { $avg: '$ultrasonic' },
+            waterlevel: { $avg: '$waterlevel' },
+            power: { $avg: '$power' },
+            recorded_at: { $max: '$recorded_at' }
+          }
+        }])
+        .limit(48)
+        .sort('_id', -1)
+        .project({ _id: 1, ultrasonic: 1, waterlevel: 1, power: 1, recorded_at: 1 })
+        .toArray()
+    } else if (logMode === '2weeks') {
+      res.records = await ctx
+        .db
+        .collection('records_perhour')
+        .aggregate([{
+          $match: {
+            device_id: id
+          }
+        }, {
+          $group: {
+            _id: { $dateToString: { date: '$recorded_at', format: '%Y-%m-%d' } },
+            ultrasonic: { $avg: '$ultrasonic' },
+            waterlevel: { $avg: '$waterlevel' },
+            power: { $avg: '$power' },
+            recorded_at: { $max: '$recorded_at' }
+          }
+        }])
+        .limit(14)
+        .sort({ _id: -1 })
+        .project({ _id: 1, ultrasonic: 1, waterlevel: 1, power: 1, recorded_at: 1 })
+        .toArray()
+
+      res.records = res.records.map(r => ({
+        _id: r._id,
+        ultrasonic: Number(r.ultrasonic.toFixed(2)),
+        waterlevel: Number(r.waterlevel.toFixed(0)),
+        power: Number(r.power.toFixed(5)),
+        recorded_at: r.recorded_at
+      }))
+    }
   }
 
   ctx.body = res
