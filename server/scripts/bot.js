@@ -166,11 +166,11 @@ program
   })
 
 program
-  .command('attack-hit <count>')
+  .command('attack-hit <bots> <count>')
   .option('-s, --server <hostname>', 'Server base or endpoint')
   .option('-k, --secret-key <string>', 'Admin token secret key')
   .description('Hit server with bots (attack mode), with key pairs: public-key.pem and private-key.pem')
-  .action(async (count, opts) => {
+  .action(async (bots, count, opts) => {
     const token = await auth.createAdminToken(opts.secretKey)
 
     const counters = {
@@ -183,7 +183,7 @@ program
         'ultrasonic=100',
         'waterlevel=2',
         'power=0.55555',
-        '_token=' + jwt.sign({ aud: id }, devicePrivateKey, { algorithm: 'ES256' })
+        '_token=' + jwt.sign({ aud: id }, devicePrivateKey, { algorithm: 'ES256' }),
       ]
 
       const ress = []
@@ -204,7 +204,7 @@ program
 
     console.log('Gather all bots...')
 
-    fetch((opts.server || 'http://localhost:8080') + '/device/list', {
+    fetch((opts.server || 'http://localhost:8080') + '/device/list?limit=' + bots, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
