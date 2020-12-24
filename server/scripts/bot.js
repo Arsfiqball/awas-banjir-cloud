@@ -54,7 +54,7 @@ program
   .option('-k, --secret-key <string>', 'Admin token secret key')
   .description('Clear all bots')
   .action(async (opts) => {
-    const token = await auth.createAdminToken()
+    const token = await auth.createAdminToken(opts.secretKey || null)
 
     fetch((opts.server || 'http://localhost:8080') + '/device/list', {
       method: 'GET',
@@ -173,6 +173,11 @@ program
   .action(async (count, opts) => {
     const token = await auth.createAdminToken(opts.secretKey)
 
+    const counters = {
+      success: 0,
+      failed: 0
+    }
+
     async function recordSensorLog (id, n) {
       const queries = [
         'ultrasonic=100',
@@ -184,7 +189,14 @@ program
       const ress = []
 
       for (let i = 0; i < n; i++) {
-        ress[i] = await fetch(`${(opts.server || 'http://localhost:8080')}/device/${id}/write?${queries.filter(r => r).join('&')}`, { method: 'GET' })
+        try {
+          ress[i] = await fetch(`${(opts.server || 'http://localhost:8080')}/device/${id}/write?${queries.filter(r => r).join('&')}`, { method: 'GET' })
+
+          if (ress[i].status === 200) counters.success++
+          else counters.failed++
+        } catch (err) {
+          counters.failed++
+        }
       }
 
       return ress
@@ -206,9 +218,11 @@ program
 
         console.log('Start attacking...')
         console.time('attack')
-        await Promise.all(bots.map(bot => recordSensorLog(bot.id, Number(count))))
+        await Promise.all(bots.map(bot => recordSensorLog(bot._id, Number(count))))
 
         console.timeEnd('attack')
+        console.log(`Succeed: ${counters.success} (${(counters.success * 100 / (counters.success + counters.failed))}%)`)
+        console.log(`Failed: ${counters.failed} (${(counters.failed * 100 / (counters.success + counters.failed))}%)`)
         console.log('Done.')
       })
       .catch(console.error)
@@ -249,12 +263,24 @@ program
   .option('-s, --server <hostname>', 'Server base or endpoint')
   .description('Hit server with users from homescreen of mobile app (attack mode)')
   .action(async (users, count, opts) => {
+    const counters = {
+      success: 0,
+      failed: 0
+    }
+
     console.log('Start attacking...')
     console.time('attack')
 
     async function hit (n) {
       for (let i = 0; i < n; i++) {
-        await fetch(`${(opts.server || 'http://localhost:8080')}/device/list`, { method: 'GET' })
+        try {
+          const res = await fetch(`${(opts.server || 'http://localhost:8080')}/device/list`, { method: 'GET' })
+
+          if (res.status === 200) counters.success++
+          else counters.failed++
+        } catch (err) {
+          counters.failed++
+        }
       }
     }
 
@@ -262,6 +288,8 @@ program
     await Promise.all(instances.map(() => hit(Number(count))))
 
     console.timeEnd('attack')
+    console.log(`Succeed: ${counters.success} (${(counters.success * 100 / (counters.success + counters.failed))}%)`)
+    console.log(`Failed: ${counters.failed} (${(counters.failed * 100 / (counters.success + counters.failed))}%)`)
     console.log('Done.')
   })
 
@@ -270,12 +298,24 @@ program
   .option('-s, --server <hostname>', 'Server base or endpoint')
   .description('Hit server with users from homescreen of mobile app (attack mode)')
   .action(async (id, users, count, opts) => {
+    const counters = {
+      success: 0,
+      failed: 0
+    }
+
     console.log('Start attacking...')
     console.time('attack')
 
     async function hit (n) {
       for (let i = 0; i < n; i++) {
-        await fetch(`${(opts.server || 'http://localhost:8080')}/device/${id}?with_log=1`, { method: 'GET' })
+        try {
+          const res = await fetch(`${(opts.server || 'http://localhost:8080')}/device/${id}?with_log=1`, { method: 'GET' })
+
+          if (res.status === 200) counters.success++
+          else counters.failed++
+        } catch (err) {
+          counters.failed++
+        }
       }
     }
 
@@ -283,6 +323,8 @@ program
     await Promise.all(instances.map(() => hit(Number(count))))
 
     console.timeEnd('attack')
+    console.log(`Succeed: ${counters.success} (${(counters.success * 100 / (counters.success + counters.failed))}%)`)
+    console.log(`Failed: ${counters.failed} (${(counters.failed * 100 / (counters.success + counters.failed))}%)`)
     console.log('Done.')
   })
 

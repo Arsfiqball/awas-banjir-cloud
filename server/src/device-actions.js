@@ -117,7 +117,7 @@ exports.list = async (ctx) => {
     .db
     .collection('devices')
     .find(params)
-    .limit(100)
+    .limit(ctx.query.limit || 100)
     .project(projection)
     .toArray()
 
