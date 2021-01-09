@@ -97,7 +97,7 @@ module.exports = function (program) {
         const createdAt = Math.floor(Date.now() / 1000)
         for (let i = 1; i <= clones; i++) bots.push(`[BOT]: ${createdAt} ${i}`)
         const ress = await Promise.all(bots.map(r => requestCreateBot(r)))
-        return ress.filter(r => r.status === 200).map(r => r.json())
+        return Promise.all(ress.filter(r => r.status === 200).map(r => r.json()))
       }
 
       function botRequest (id) {

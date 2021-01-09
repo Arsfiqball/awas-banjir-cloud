@@ -67,7 +67,7 @@ module.exports = function (program) {
       const jwtOpts = { algorithm: 'HS256' }
       const token = await jwt.sign(payload, adminKey, jwtOpts)
 
-      const res = await fetch(`${server}/device/list`, {
+      const res = await fetch(`${server}/device/list?limit=900`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

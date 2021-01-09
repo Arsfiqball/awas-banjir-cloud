@@ -15,7 +15,7 @@ module.exports = function (program) {
       const targetable = {
         homescreen () {
           return new Promise(function (resolve, reject) {
-            const uri = `${server}/device/list`
+            const uri = `${server}/device/list?limit=10`
             const parsedURI = new URL(uri)
 
             const options = {
