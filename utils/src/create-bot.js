@@ -15,7 +15,7 @@ module.exports = function (program) {
       if (!options.adminKey) return console.error('Secret key is required!')
       if (!options.publicKey) return console.error('Device public key is required!')
 
-      const server = options.server || 'https://localhost:8080'
+      const server = options.server || 'http://localhost:8080'
       const multiply = options.multiply || 1
       const adminKey = options.adminKey
       const publicKeyPath = path.resolve(process.cwd(), options.publicKey)
@@ -59,7 +59,7 @@ module.exports = function (program) {
     .action(async function (options) {
       if (!options.adminKey) return console.error('Secret key is required!')
 
-      const server = options.server || 'https://localhost:8080'
+      const server = options.server || 'http://localhost:8080'
       const adminKey = options.adminKey
 
       const exp = Math.floor(Date.now() / 1000) + 3600

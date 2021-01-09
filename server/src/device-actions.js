@@ -46,12 +46,18 @@ exports.create = async (ctx) => {
 
   if (!name || !description || !secretKey) return ctx.throw(400)
 
-  await ctx
+  const result = await ctx
     .db
     .collection('devices')
     .insertOne({ name, description, secret_key: secretKey })
 
-  ctx.body = 'OK'
+  ctx.body = {
+    _id: result.insertedId,
+    name,
+    description,
+    secret_key: secretKey
+  }
+
   ctx.status = 200
 }
 
