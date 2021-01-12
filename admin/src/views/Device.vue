@@ -65,6 +65,25 @@
         <div class="field is-horizontal">
           <div class="field-label is-normal">
             <label class="label">
+              Koordinat
+            </label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control">
+                <input type="text" class="input" v-model="latitude" placeholder="Tulis koordinat latitude...">
+              </div>
+            </div>
+            <div class="field">
+              <div class="control">
+                <input type="text" class="input" v-model="longitude" placeholder="Tulis koordinat longitude...">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">
               Deskripsi
             </label>
           </div>
@@ -127,6 +146,8 @@ export default {
     return {
       name: null,
       description: null,
+      latitude: null,
+      longitude: null,
       secretKey: null,
       modalConfirmDeleteIsActive: false
     }
@@ -142,6 +163,8 @@ export default {
         const { data } = await api.get(`/device/${this.$route.params.id}`)
         this.name = data.name
         this.description = data.description
+        this.latitude = data.coordinate?.latitude
+        this.longitude = data.coordinate?.longitude
         this.secretKey = data.secret_key
       } catch (err) {
         this.$root.forceLogoutOn401(err)
@@ -162,6 +185,7 @@ export default {
         await api.post('/device/add', {
           name: this.name,
           description: this.description,
+          coordinate: this.latitude + ',' + this.longitude,
           secret_key: this.secretKey
         })
 
@@ -172,6 +196,7 @@ export default {
         await api.put('/device/' + this.$route.params.id, {
           name: this.name,
           description: this.description,
+          coordinate: this.latitude + ',' + this.longitude,
           secret_key: this.secretKey
         })
 

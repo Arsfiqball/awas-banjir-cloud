@@ -43,19 +43,28 @@ exports.create = async (ctx) => {
   const name = ctx.request.body.name
   const description = ctx.request.body.description
   const secretKey = ctx.request.body.secret_key
+  const coordinate = ctx.request.body.coordinate
+  const [latitude, longitude] = coordinate.split(',').map(r => Number(r.trim()))
 
-  if (!name || !description || !secretKey) return ctx.throw(400)
+  if (!name || !description || !secretKey || !coordinate) return ctx.throw(400)
+  if (!latitude || !longitude) return ctx.throw(400)
 
   const result = await ctx
     .db
     .collection('devices')
-    .insertOne({ name, description, secret_key: secretKey })
+    .insertOne({
+      name,
+      description,
+      secret_key: secretKey,
+      coordinate: { latitude, longitude }
+    })
 
   ctx.body = {
     _id: result.insertedId,
     name,
     description,
-    secret_key: secretKey
+    secret_key: secretKey,
+    coordinate: { latitude, longitude }
   }
 
   ctx.status = 200
@@ -69,17 +78,32 @@ exports.update = async (ctx) => {
   const name = ctx.request.body.name
   const description = ctx.request.body.description
   const secretKey = ctx.request.body.secret_key
+  const coordinate = ctx.request.body.coordinate
+  const [latitude, longitude] = coordinate.split(',').map(r => Number(r.trim()))
 
-  if (!name || !description || !secretKey) return ctx.throw(400)
+  if (!name || !description || !secretKey || !coordinate) return ctx.throw(400)
+  if (!latitude || !longitude) return ctx.throw(400)
 
-  const $set = { name, description, secret_key: secretKey }
+  const $set = {
+    name,
+    description,
+    secret_key: secretKey,
+    coordinate: { latitude, longitude }
+  }
 
   await ctx
     .db
     .collection('devices')
     .findOneAndUpdate({ _id: id }, { $set })
 
-  ctx.body = 'OK'
+  ctx.body = {
+    _id: ctx.params.id,
+    name,
+    description,
+    secret_key: secretKey,
+    coordinate: { latitude, longitude }
+  }
+
   ctx.status = 200
 }
 
@@ -92,7 +116,7 @@ exports.remove = async (ctx) => {
     .collection('devices')
     .findOneAndDelete({ _id: ObjectID(ctx.params.id) })
 
-  ctx.body = 'OK'
+  ctx.body = { success: true }
   ctx.status = 200
 }
 
@@ -112,7 +136,8 @@ exports.list = async (ctx) => {
     _id: 1,
     name: 1,
     description: 1,
-    last_recorded: 1
+    last_recorded: 1,
+    coordinate: 1
   }
 
   if (ctx.auth && ctx.auth.admin) {
@@ -140,7 +165,8 @@ exports.read = async (ctx) => {
   const projection = {
     _id: 1,
     name: 1,
-    description: 1
+    description: 1,
+    coordinate: 1
   }
 
   if (ctx.auth && ctx.auth.admin) {
