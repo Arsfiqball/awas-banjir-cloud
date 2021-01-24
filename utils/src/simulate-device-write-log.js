@@ -31,9 +31,9 @@ module.exports = function (program) {
       const jwtOpts = { algorithm: options.algorithm || 'ES256' }
 
       const queries = [
-        'ultrasonic=' + (options.ultrasonic ? options.ultrasonic : '100'),
-        'waterlevel=' + (options.waterlevel ? options.waterlevel : '2'),
-        'power=' + (options.power ? options.power : '0.55555'),
+        options.ultrasonic ? 'ultrasonic=' + options.ultrasonic : null,
+        options.waterlevel ? 'waterlevel=' + options.waterlevel : null,
+        options.power ? 'power=' + options.power : null,
         options.notify ? 'notify=1' : null,
         '_token=' + jwt.sign({ aud: id }, privateKey, jwtOpts)
       ]
