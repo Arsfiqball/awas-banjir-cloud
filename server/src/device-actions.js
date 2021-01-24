@@ -123,8 +123,12 @@ exports.remove = async (ctx) => {
 exports.list = async (ctx) => {
   const params = {}
 
-  if (ctx.query.ids && ctx.query.ids.length) {
-    params._id = { $in: ctx.query.ids.map(r => ObjectID(r)) }
+  if (ctx.query.ids) {
+    params._id = {
+      $in: Array.isArray(ctx.query.ids)
+        ? ctx.query.ids.map(r => ObjectID(r))
+        : [ObjectID(ctx.query.ids)]
+    }
   }
 
   if (ctx.query.search) {
