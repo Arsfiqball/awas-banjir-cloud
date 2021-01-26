@@ -52,7 +52,7 @@ module.exports = function (program) {
     .option('--algorithm <alg>', 'Algorithm to sign device JWT RS256 or ES256 (default)')
     .option('--public-key <filepath>', 'Device public key file path')
     .option('--private-key <filepath>', 'Device private key file path')
-    .option('--rapid-trigger <hostname>', 'Rapid trigger host')
+    .option('--plain-report', 'Report stats without property name and comma separated')
     .description('Simulate bot request to write log')
     .action(async (clones, options) => {
       if (!options.adminKey) return console.error('Admin secret key is required!')
@@ -83,6 +83,7 @@ module.exports = function (program) {
           body: JSON.stringify({
             name,
             description: 'Just a random bot',
+            coordinate: '1,1',
             secret_key: publicKey
           }),
           headers: {
@@ -175,49 +176,36 @@ module.exports = function (program) {
         return ress.filter(r => r.status === 200).length
       }
 
-      async function rapidTrigger (label) {
-        const startTime = Date.now()
-
-        if (options.rapidTrigger) {
-          await fetch(`${options.rapidTrigger}/start?label=${label}`, { method: 'GET' })
-        }
-
-        return {
-          async done (results) {
-            if (options.rapidTrigger) {
-              await fetch(`${options.rapidTrigger}/stop`, { method: 'GET' })
-            }
-
-            return {
-              time: Date.now() - startTime,
-              successRate: clones * (options.multiply || 1) * 100 / results.success,
-              bytesReadPerRequest: results.bytesRead / results.success,
-              bytesWrittenPerRequest: results.bytesWritten / results.success,
-              ...results
-            }
-          }
-        }
-      }
-
-      const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
-
       const bots = await generateBots()
-      console.log(`Created ${bots.length} bots`)
-
-      await delay(2000)
-      const rt = await rapidTrigger(clones)
+      const timeStart = (new Date()).toLocaleTimeString()
+      const timeStartMS = Date.now()
       const results = await multipleBotAttack(bots)
-      const rtd = await rt.done(results)
-      await delay(2000)
-
-      console.log()
-      console.log('>> DATA:')
-      console.log(Object.keys(rtd).join(';'))
-      console.log(Object.values(rtd).join(';'))
-      console.log()
-      console.log(`Done making ${results.success} requests`)
-
+      const timeEnd = (new Date()).toLocaleTimeString()
       const removed = await clearBots(bots)
-      console.log(`Removed ${removed} bots`)
+      const latency = Date.now() - timeStartMS
+
+      const dump = [
+        `TimeStart: ${timeStart}`,
+        `TimeEnd: ${timeEnd}`,
+        `Created: ${bots.length}`,
+        `Latency: ${latency}`,
+        `SuccessReqs: ${results.success}`,
+        `BytesRead: ${results.bytesRead}`,
+        `BytesWritten: ${results.bytesWritten}`,
+        `Removed: ${removed}`
+      ]
+
+      const plain = [
+        timeStart,
+        timeEnd,
+        bots.length,
+        latency,
+        results.success,
+        results.bytesRead,
+        results.bytesWritten,
+        removed
+      ]
+
+      console.log(options.plainReport ? plain.join(',') : dump.join(' '))
     })
 }

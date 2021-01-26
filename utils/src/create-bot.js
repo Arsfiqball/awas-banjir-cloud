@@ -36,6 +36,7 @@ module.exports = function (program) {
           body: JSON.stringify({
             name,
             description: 'Just a random bot',
+            coordinate: '1,1',
             secret_key: publicKey
           }),
           headers: {

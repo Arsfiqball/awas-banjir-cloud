@@ -52,65 +52,26 @@ async function getStats () {
 
 module.exports = function (program) {
   program
-    .command('measure-server-status')
+    .command('measure-server-performance')
+    .option('--plain-report', 'Report stats without property name and comma separated')
     .description('Measuring server performance in several aspects')
     .action(async function (options) {
       const stats = await getStats()
-      console.log(stats)
-    })
 
-  program
-    .command('measure-server-performance')
-    .option('-p, --port <value>', 'Rapid trigger port')
-    .option('-h, --host <value>', 'Rapid trigger host')
-    .description('Measuring server performance in several aspects')
-    .action(async function (options) {
-      const app = new Koa()
-      const router = new Router()
-      const state = { label: null, intervalId: null, raw: [] }
+      const dump = [
+        `Time: ${(new Date()).toLocaleTimeString()}`,
+        `TotalCPU: ${stats.totalCPU.toFixed(3)}`,
+        `TotalMemory: ${stats.totalCPU.toFixed(3)}`,
+        `TotalActiveMemory: ${stats.totalActiveMemoryKiloBytes}`
+      ]
 
-      function accumulate () {
-        const data = { label: state.label }
+      const plain = [
+        (new Date()).toLocaleTimeString(),
+        stats.totalCPU.toFixed(3),
+        stats.totalMemory.toFixed(3),
+        stats.totalActiveMemoryKiloBytes
+      ]
 
-        for (let i = 0; i < state.raw.length; i++) {
-          Object.keys(state.raw[i]).forEach(key => {
-            if (!data[key]) data[key] = 0
-            data[key] = Math.max(state.raw[i][key], data[key])
-          })
-        }
-
-        return data
-      }
-
-      async function record () {
-        const pss = await getStats()
-        state.raw.push(pss)
-      }
-
-      router.get('/start', async function (ctx) {
-        console.log('started', ctx.query.label)
-        state.label = ctx.query.label
-        state.raw = []
-        await record()
-        state.intervalId = setInterval(record, 50)
-      })
-
-      router.get('/stop', function (ctx) {
-        clearInterval(state.intervalId)
-        state.intervalId = null
-        console.log(accumulate())
-        console.log('stoped', state.label)
-        state.label = null
-      })
-
-      app.use(router.routes())
-      app.use(router.allowedMethods())
-
-      const port = options.port || 9010
-      const host = options.host || '127.0.0.1'
-
-      app.listen(port, host, async () => {
-        console.log(`Rapid trigger listening at ${host}:${port}`)
-      })
+      console.log(options.plainReport ? plain.join(',') : dump.join(' '))
     })
 }

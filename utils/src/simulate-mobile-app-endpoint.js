@@ -1,13 +1,12 @@
 const http = require('http')
 const https = require('https')
-const fetch = require('node-fetch')
 
 module.exports = function (program) {
   program
     .command('simulate-mobile-app-endpoint <target> <count>')
     .option('--id <uuid>', 'Pass ID parameters')
     .option('--server <hostname>', 'Server base or endpoint')
-    .option('--rapid-trigger <hostname>', 'Rapid trigger host')
+    .option('--plain-report', 'Report stats without property name and comma separated')
     .description('Simulate attacking endpoints for mobile app')
     .action(async (target, count, options) => {
       const server = options.server || 'http://localhost:8080'
@@ -15,13 +14,13 @@ module.exports = function (program) {
       const targetable = {
         homescreen () {
           return new Promise(function (resolve, reject) {
-            const uri = `${server}/device/list?limit=10`
-            const parsedURI = new URL(uri)
+            const path = '/device/list?limit=10'
+            const parsedURI = new URL(server)
 
             const options = {
               hostname: parsedURI.hostname,
               port: parsedURI.port,
-              path: parsedURI.path,
+              path: path,
               method: 'GET'
             }
 
@@ -72,30 +71,6 @@ module.exports = function (program) {
         return console.error('No target available')
       }
 
-      async function rapidTrigger (label) {
-        const startTime = Date.now()
-
-        if (options.rapidTrigger) {
-          await fetch(`${options.rapidTrigger}/start?label=${label}`, { method: 'GET' })
-        }
-
-        return {
-          async done (results) {
-            if (options.rapidTrigger) {
-              await fetch(`${options.rapidTrigger}/stop`, { method: 'GET' })
-            }
-
-            return {
-              time: Date.now() - startTime,
-              successRate: count * 100 / results.success,
-              bytesReadPerRequest: results.bytesRead / results.success,
-              bytesWrittenPerRequest: results.bytesWritten / results.success,
-              ...results
-            }
-          }
-        }
-      }
-
       async function multipleRequest (instances) {
         const results = await Promise.all(instances.map(() => targetable[target]()))
 
@@ -107,15 +82,30 @@ module.exports = function (program) {
       }
 
       const instances = Array(Number(count)).fill(null)
-      const rt = await rapidTrigger(count)
+      const timeStart = (new Date()).toLocaleTimeString()
+      const timeStartMS = Date.now()
       const results = await multipleRequest(instances)
-      const rtd = await rt.done(results)
+      const timeEnd = (new Date()).toLocaleTimeString()
+      const latency = Date.now() - timeStartMS
 
-      console.log()
-      console.log('>> DATA:')
-      console.log(Object.keys(rtd).join(';'))
-      console.log(Object.values(rtd).join(';'))
-      console.log()
-      console.log(`Done making ${results.success} requests`)
+      const dump = [
+        `TimeStart: ${timeStart}`,
+        `TimeEnd: ${timeEnd}`,
+        `Latency: ${latency}`,
+        `SuccessReqs: ${results.success}`,
+        `BytesRead: ${results.bytesRead}`,
+        `BytesWritten: ${results.bytesWritten}`
+      ]
+
+      const plain = [
+        timeStart,
+        timeEnd,
+        latency,
+        results.success,
+        results.bytesRead,
+        results.bytesWritten
+      ]
+
+      console.log(options.plainReport ? plain.join(',') : dump.join(' '))
     })
 }
