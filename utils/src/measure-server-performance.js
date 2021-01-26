@@ -1,7 +1,5 @@
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
-const Koa = require('koa')
-const Router = require('@koa/router')
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -23,7 +21,7 @@ async function getTotalCPU () {
   const stdout1 = (await exec(grep)).stdout
   const [prevTotal, prevIdle] = stdout1.split(',').map(r => Number(r.trim()))
 
-  await delay(10)
+  await delay(500)
   const stdout2 = (await exec(grep)).stdout
   const [total, idle] = stdout2.split(',').map(r => Number(r.trim()))
 

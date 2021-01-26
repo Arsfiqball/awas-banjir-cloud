@@ -42,13 +42,13 @@ module.exports = function (program) {
           return new Promise(function (resolve, reject) {
             if (!options.id) return reject(new Error('ID Required!'))
 
-            const uri = `${server}/device/${options.id}`
-            const parsedURI = new URL(uri)
+            const path = `/device/${options.id}?with_log=true`
+            const parsedURI = new URL(server)
 
             const reqOpts = {
               hostname: parsedURI.hostname,
               port: parsedURI.port,
-              path: parsedURI.path,
+              path: path,
               method: 'GET'
             }
 
@@ -89,6 +89,7 @@ module.exports = function (program) {
       const latency = Date.now() - timeStartMS
 
       const dump = [
+        `TotalReqs: ${count}`,
         `TimeStart: ${timeStart}`,
         `TimeEnd: ${timeEnd}`,
         `Latency: ${latency}`,
@@ -98,6 +99,7 @@ module.exports = function (program) {
       ]
 
       const plain = [
+        count,
         timeStart,
         timeEnd,
         latency,
