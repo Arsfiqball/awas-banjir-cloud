@@ -77,13 +77,13 @@ module.exports = function (program) {
           ]
 
           const queryString = queries.filter(r => r).join('&')
-          const uri = `${server}/device/${id}/write?${queryString}`
-          const parsedURI = new URL(uri)
+          const path = `/device/${id}/write?${queryString}`
+          const parsedURI = new URL(server)
 
           const options = {
             hostname: parsedURI.hostname,
             port: parsedURI.port,
-            path: parsedURI.path,
+            path: path,
             method: 'GET'
           }
 
