@@ -1,8 +1,6 @@
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
-
 async function getActiveMemory () {
   const grep = "grep \"Active:\" /proc/meminfo | awk '{ print $2 }'"
   const { stdout } = await exec(grep)
@@ -15,61 +13,48 @@ async function getTotalMemory () {
   return Number(stdout.trim())
 }
 
-async function getTotalCPU () {
+async function grepCPU () {
   const grep = "grep 'cpu ' /proc/stat | awk '{for (i=2; i<=NF; i++) total += $i} END {print total \",\" $5 }'"
-
   const stdout1 = (await exec(grep)).stdout
-  const [prevTotal, prevIdle] = stdout1.split(',').map(r => Number(r.trim()))
-
-  await delay(500)
-  const stdout2 = (await exec(grep)).stdout
-  const [total, idle] = stdout2.split(',').map(r => Number(r.trim()))
-
-  return (1 - (idle - prevIdle) / (total - prevTotal)) * 100
+  const [total, idle] = stdout1.split(',').map(r => Number(r.trim()))
+  return { total, idle }
 }
 
-async function getStats () {
-  const [
-    totalCPU,
-    totalMemoryKiloBytes,
-    totalActiveMemoryKiloBytes
-  ] = await Promise.all([
-    getTotalCPU(),
-    getTotalMemory(),
-    getActiveMemory()
-  ])
-
-  const totalMemory = totalActiveMemoryKiloBytes * 100 / totalMemoryKiloBytes
-
-  return {
-    totalCPU,
-    totalMemory,
-    totalActiveMemoryKiloBytes
-  }
+function calculateCPU (prev, curr) {
+  return (1 - (curr.idle - prev.idle) / (curr.total - prev.total)) * 100
 }
 
 module.exports = function (program) {
   program
     .command('measure-server-performance')
     .option('--plain-report', 'Report stats without property name and comma separated')
+    .option('--interval', 'Interval')
     .description('Measuring server performance in several aspects')
     .action(async function (options) {
-      const stats = await getStats()
+      const state = { cpu: await grepCPU() }
 
-      const dump = [
-        `Time: ${(new Date()).toLocaleTimeString()}`,
-        `TotalCPU: ${stats.totalCPU.toFixed(3)}`,
-        `TotalMemory: ${stats.totalCPU.toFixed(3)}`,
-        `TotalActiveMemory: ${stats.totalActiveMemoryKiloBytes}`
-      ]
+      setInterval(async () => {
+        const cpu = await grepCPU()
+        const percentCPU = calculateCPU(state.cpu, cpu)
+        const totalKiloBytesMemory = await getTotalMemory()
+        const activeKiloBytesMemory = await getActiveMemory()
+        const percentMemory = activeKiloBytesMemory * 100 / totalKiloBytesMemory
 
-      const plain = [
-        (new Date()).toLocaleTimeString(),
-        stats.totalCPU.toFixed(3),
-        stats.totalMemory.toFixed(3),
-        stats.totalActiveMemoryKiloBytes
-      ]
+        const dump = [
+          `Time: ${(new Date()).toLocaleTimeString()}`,
+          `PercentCPU: ${percentCPU.toFixed(3)}`,
+          `PercentMemory: ${percentMemory.toFixed(3)}`,
+          `KiloBytesMemory: ${activeKiloBytesMemory}`
+        ]
 
-      console.log(options.plainReport ? plain.join(',') : dump.join(' '))
+        const plain = [
+          (new Date()).toLocaleTimeString(),
+          percentCPU.toFixed(3),
+          percentMemory.toFixed(3),
+          activeKiloBytesMemory
+        ]
+
+        console.log(options.plainReport ? plain.join(',') : dump.join(' '))
+      }, options.interval || 1000)
     })
 }
