@@ -232,16 +232,11 @@ exports.read = async (ctx) => {
             device_id: id
           }
         }, {
-          $group: {
-            _id: { $dateToString: { date: '$recorded_at', format: '%Y-%m-%d %H' } },
-            ultrasonic: { $avg: '$ultrasonic' },
-            waterlevel: { $avg: '$waterlevel' },
-            power: { $avg: '$power' },
-            recorded_at: { $max: '$recorded_at' }
+          $sort: {
+            _id: -1
           }
         }])
         .limit(48)
-        .sort({ _id: -1 })
         .project({ _id: 1, ultrasonic: 1, waterlevel: 1, power: 1, recorded_at: 1 })
         .toArray()
     } else if (logMode === '2weeks') {
@@ -262,7 +257,7 @@ exports.read = async (ctx) => {
           }
         }])
         .limit(14)
-        .sort({ _id: -1 })
+        .sort({ recorded_at: -1 })
         .project({ _id: 1, ultrasonic: 1, waterlevel: 1, power: 1, recorded_at: 1 })
         .toArray()
 
